@@ -1,0 +1,73 @@
+<html>
+  <head>
+    <title>MDP</title>
+    <style>
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <input id="T" type="number" min="1" max="100" value="50" />
+    <input id="C" type="number" min="1" max="100" value="6" />
+    <div id="dist"></div>
+    <svg></svg>
+    <script src="sky.js"></script>
+    <script src="mdp.js"></script>
+    <script>
+      (function () {
+        var num = parseFloat;
+        var dst = new Sky.Elem(dist);
+        var svg = new Sky.SVGElem(document.querySelector('svg'));
+        var inventory = function (T, C, P) {
+          var X = [];
+          for (var i = 0; i <= C; i++)
+            X[i] = i;
+          var mdp = {
+            T: T,
+            X: function (f, a, _) { return X.reduce(f, a) },
+            U: function (f, a, _) { return X.reduce(f, a) },
+            W: function (f, a, _) { return P.reduce(f, a) },
+            f: function (t, x, u, w) { return x - w + u },
+            g: function (t, x, u, w) {
+              var x_ = x - w + u;
+              if (x_ >= 0 && x_ <= C)
+                return .1 * x + 1 * (u > 0);
+              return Infinity;
+            }
+          }
+          return mdp;
+        };
+
+        var draw = function (T, C, P) {
+          svg.clear();
+          MDP.policy(inventory(T, C, P), function (t, opt) {
+              for (var k in opt) {
+                var x = -num(k), v = num(opt[k][0]), u = -num(opt[k][1]), s = t + .5
+                svg.circle(t, x, .4).attrs({fill: Sky.util.mix(v, {max: 25, lo: {a: .1, b: 100}})});
+                svg.path('M' + t + ',' + x + 'Q' + s + ',' + x  + ' ' + s + ',' + (x + u)).attrs({stroke: 'rgba(0, 0, 0, .3)', 'stroke-width': .1, fill: 'none'});
+              }
+              svg.fit();
+            });
+        };
+
+        T.onchange = C.onchange = function () {
+          var T_ = num(T.value), C_ = num(C.value), P_ = [.7, .2, .1];
+          dst.clear()
+          for (var i = 0; i < num(C.value); i++)
+            (function (i) {
+              var c = dst.child('input', {type: "number", min: 0, max: 1});
+              c.node.value = P_[i] || 0;
+              c.node.addEventListener('change', function (e) {
+                  P_[i] = num(e.target.value);
+                  draw(T_, C_, P_);
+                });
+            })(i);
+          draw(T_, C_, P_);
+        };
+        T.onchange();
+      })();
+    </script>
+  </body>
+</html>

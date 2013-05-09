@@ -1,0 +1,8 @@
+=========================
+ee365: stochastic control
+=========================
+
+Implementation of markov decision problems in various languages,
+for the Stanford course taught by Sanjay Lall and Stephen Boyd::
+
+    http://www.stanford.edu/class/ee365

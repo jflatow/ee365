@@ -1,0 +1,114 @@
+<html>
+  <head>
+    <title>MDP</title>
+    <style>
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      input {
+        width: 5em;
+      }
+
+      label {
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <input id="T" type="number" min="1" max="100" value="50" />
+    <input id="QMin" type="number" min="-100" max="0" value="-5" />
+    <input id="QMax" type="number" min="0" max="100" value="15" />
+    <input id="Gamma" type="number" min="0" max="1" value=".005" step=".1" />
+    <input id="N" type="number" min="1" max="100" value="20" />
+    <input id="SH" type="number" min="0" max="10" value=".005" step=".1" />
+    <input id="TC" type="number" min="0" max="10" value=".005" step=".1" />
+    <input id="TP" type="number" min="1" max="10" value="1.5" step=".1" />
+    <label id="label"></label>
+    <svg></svg>
+    <script src="sky.js"></script>
+    <script src="mdp.js"></script>
+    <script>
+      (function () {
+        var num = parseFloat;
+        trading = function (T, qmin, qmax, gamma, N, SH, TC, TP) {
+          var X = [];
+          for (var q = qmin; q <= qmax; q++)
+            for (var n = -N; n <= N; n++)
+              X.push([q, n]);
+          var prices = {}, ptrans = {};
+          for (var n = -N; n <= N; n++) {
+            var p = Math.pow(1 + gamma, n);
+            var l = Math.log(p) * 2;
+            var a = n <  N ? Math.min(Math.max(0.4 - l, 0.01), 0.98) : 0;
+            var b = n > -N ? Math.min(Math.max(0.4 + l, 0.01), 0.98) : 0;
+            prices[n] = p;
+            ptrans[n] = {};
+            ptrans[n][n] = 1 - a - b;
+            ptrans[n][n + 1] = a;
+            ptrans[n][n - 1] = b;
+          }
+          var mdp = {
+            T: T,
+            X: function (f, a, _) { return X.reduce(f, a) },
+            U: function (f, a, s) {
+              var U = [], Q = s[1][0];
+              for (var q = qmin - Q; q <= qmax - Q; q++)
+                U.push(q);
+              return U.reduce(f, a);
+            },
+            W: function (f, a, s) { return MDP.fold(f, a, ptrans[s[1][1]]) },
+            f: function (t, x, u, w) { return [x[0] + u, w] },
+            g: function (t, x, u, w) {
+              var q = x[0], n = x[1];
+              if (t < T)
+                return u * prices[n] + (q < 0 ? SH : 0) + Math.pow(TC * Math.abs(u), TP) ;
+              return (x[0] + u == 0) ? 1 : Infinity;
+            }
+          };
+          return mdp;
+        };
+
+        var draw = function () {
+          var T_ = num(T.value);
+          var qmin = num(QMin.value), qmax = num(QMax.value);
+          var gamma = num(Gamma.value), N_ = num(N.value);
+          var sh = num(SH.value), tc = num(TC.value), tp = num(TP.value);
+          var r = .4, s = r / (qmax - qmin);
+          var mdp = trading(T_, qmin, qmax, gamma, N_, sh, tc, tp);
+
+          var elems = {};
+          var svg = (new Sky.SVGElem(document.querySelector('svg'))).clear();
+          var cb = function (t, opt) {
+            var mopts = {min: (t - T_) / 2, max: (T_ - t) / 2, lo: {b: 100, a: .3}, hi: {r: 100, a: .3}};
+
+            for (var k in opt) {
+              var x = k.split(',');
+              var q = num(x[0]), p = num(x[1]);
+              var v = num(opt[k][0]), u = num(opt[k][1]);
+              var stroke = u > 0 ? 'rgba(0, 200, 0, .9)' : (u < 0 ? 'rgba(200, 200, 0, .9)' : 'white');
+              var c = elems[k] = elems[k] || svg.circle(p, -q, r);
+              (function (t, p, q, u, v) {
+                c.node.onmouseover = function () {
+                  label.innerText = 't: ' + t + ' quantity: ' + q + ' price: ' + p + ' buy: ' + u + ' val: ' + v.toFixed(2);
+                };
+              })(t, p, q, u, v);
+              c.attrs({fill: Sky.util.mix(v, mopts), stroke: stroke, 'stroke-width': Math.abs(u) * s});
+            }
+            svg.fit();
+          };
+          var anim = window.requestAnimationFrame || window.webkitRequestAnimationFrame;
+          var t = mdp.T, opt = {};
+          anim(function () {
+              cb(t, opt = MDP.bellman(t, mdp, opt));
+              if (t-- > 0)
+                anim(arguments.callee);
+            });
+        };
+        draw();
+        T.onchange = QMin.onchange = QMax.onchange = Gamma.onchange = N.onchange = SH.onchange = TC.onchange = TP.onchange = draw;
+      })();
+    </script>
+  </body>
+</html>
