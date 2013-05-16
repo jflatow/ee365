@@ -26,25 +26,25 @@ class Trader(mdp.MDP):
         return q + u, n_
 
     def cost(self, t, (q, n), u, n_):
-        if t < self.T - 1:
+        if t < self.T:
             return u * self.prices[n]
         return 0 if q + u == 0 else inf
 
 class TraderSH(Trader):
     def cost(self, t, (q, n), u, n_):
-        if t < self.T - 1:
+        if t < self.T:
             return u * self.prices[n] + (.005 if q < 0 else 0)
         return 0 if q + u == 0 else inf
 
 class TraderLin(Trader):
     def cost(self, t, (q, n), u, n_):
-        if t < self.T - 1:
+        if t < self.T:
             return u * self.prices[n] + (.005 * abs(u))
         return 0 if q + u == 0 else inf
 
 class TraderSHNL(Trader):
     def cost(self, t, (q, n), u, n_):
-        if t < self.T - 1:
+        if t < self.T:
             return u * self.prices[n] + (.0001 if q < 0 else 0) + (.005 * abs(u) ** 1.5)
         return 0 if q + u == 0 else inf
 

@@ -35,7 +35,7 @@ class Designer(mdp.MDP):
         return n_
 
     def cost(self, t, n, k, n_):
-        if t < self.T - 1:
+        if t < self.T:
             return self.tests[k][2]
         return self.tests[k][2] + self.r * min(n_, self.N - n_)
 
