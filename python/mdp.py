@@ -24,7 +24,7 @@ def Vtot():
 def Vdsc(gamma):
     return lambda x, o: o.get(x, (0, None))[0] * gamma
 
-def Vavg(x_):
+def Vrel(x_):
     return lambda x, o: o.get(x, (0, None))[0] - o.get(x_, (0, None))[0]
 
 def bellman(T, X, U, W, f, g, V, o={}):

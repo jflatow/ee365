@@ -48,6 +48,6 @@ def plot(policy, T=0, alpha=1):
     pylab.show()
 
 if __name__ == '__main__':
-    for V in (mdp.Vtot(), mdp.Vdsc(.5), mdp.Vdsc(.1), mdp.Vavg((0, 0))):
+    for V in (mdp.Vtot(), mdp.Vdsc(.5), mdp.Vdsc(.1), mdp.Vrel((0, 0))):
         policy = dict(Stopper().policy(V=V))
         plot(policy, len(policy) - 1)
