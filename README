@@ -6,3 +6,35 @@ Implementation of markov decision problems in various languages,
 for the Stanford course taught by Sanjay Lall and Stephen Boyd::
 
     http://www.stanford.edu/class/ee365
+
+bellman equation
+================
+
+The key to solving these problems is dynamic programming, i.e. solving the Bellman equation.
+The solution is remarkably simple, but requires some thinking to understand exactly how it works.
+The fact that we can iterate forwards or backwards to much avail, can be somewhat mind-bending.
+The following pictures have helped me to sort out it all out:
+
+Forward iteration:
+
+         ________
+        |_____   |
+        |__   |  |
+        |  |  |  |
+        0  .  .  .  .  .  . K
+         -> -> -> -> -> -> ->
+
+        every iteration `i`, computes the optimal policy / cost-to-go function from `t = 0` to `t = K`
+        as `K` increases to `infinity`, this yields the solution to infinite horizon problems
+
+Backward iteration:
+
+                     _______
+                    |   ____|
+                    |  |   _|
+                    |  |  | |
+        0  .  .  .  .  .  . T
+         <- <- <- <- <- <- <-
+
+         every iteration `i`, computes the optimal policy / cost-to-go function from `t = T - i` to `t = T`
+         for a finite horizon problem, this yields the solution for every step along the way
